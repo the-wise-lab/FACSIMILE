@@ -67,3 +67,16 @@ def train_validation_test_split(
     )
 
     return X_train, X_val, X_test, y_train, y_val, y_test
+
+
+def load_model(model_path: str) -> object:
+    """
+    Load a model from disk.
+
+    Args:
+        model_path (str): Path to the model file.
+
+    Returns:
+        object: The loaded model.
+    """
+    return joblib.load(model_path)

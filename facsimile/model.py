@@ -2,6 +2,7 @@ from sklearn.base import BaseEstimator
 from sklearn.linear_model import Lasso, LinearRegression
 from sklearn.model_selection import train_test_split, cross_val_predict
 from sklearn.metrics import r2_score
+import joblib
 from typing import Tuple, Union, List
 from numpy.typing import ArrayLike
 import pandas as pd
@@ -140,8 +141,8 @@ class FACSIMILE(BaseEstimator):
             pred[:, var] = y_pred
 
         return pred
-    
-    def get_weights(self, factor_names:List[str] = None) -> pd.DataFrame:
+
+    def get_weights(self, factor_names: List[str] = None) -> pd.DataFrame:
         """
         Return the classifier weights as a pandas dataframe.
 
@@ -176,3 +177,14 @@ class FACSIMILE(BaseEstimator):
         weights.columns = factor_names
 
         return weights
+
+    def save(self, path: str):
+        """
+        Save the model to a file.
+
+        Args:
+            path (str): Path to save the model to.
+        """
+
+        # Save the model to a file using joblib
+        joblib.dump(self, path)
