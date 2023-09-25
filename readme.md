@@ -10,7 +10,7 @@ The method uses Lasso-regularised regression to select items that are most predi
 First, clone or download this repository. The package can then be installed using pip from the root directory:
     
 ```bash
-pip install -e .
+pip install .
 ```
 
 ## Usage
