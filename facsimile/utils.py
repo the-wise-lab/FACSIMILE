@@ -3,6 +3,7 @@ import contextlib
 from tqdm import tqdm
 from typing import Tuple
 import numpy as np
+import pandas as pd
 from sklearn.model_selection import train_test_split
 
 
@@ -80,3 +81,16 @@ def load_model(model_path: str) -> object:
         object: The loaded model.
     """
     return joblib.load(model_path)
+
+def simple_predict(weights:pd.DataFrame, X:np.ndarray) -> np.ndarray:
+    """
+    Predict factor scores using a simple linear model.
+
+    Args:
+        weights (pd.DataFrame): A dataframe containing the weights for each item.
+        X (np.ndarray): The input data.
+
+    Returns:
+        np.ndarray: The predicted factor scores.
+    """
+    return X @ weights.values[:-1] + weights.values[-1]

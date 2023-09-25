@@ -30,6 +30,10 @@ def plot_predictions(
     # Get number of factors
     n_factors = true.shape[1]
 
+    # Make sure true and pred are numpy arrays
+    true = np.array(true)
+    pred = np.array(pred)
+
     # Check factor names are correct length
     if factor_names is not None:
         assert (

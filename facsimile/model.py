@@ -176,6 +176,9 @@ class FACSIMILE(BaseEstimator):
         # Add factor names as columns
         weights.columns = factor_names
 
+        # Add intercept row
+        weights.loc["Intercept"] = [clf.intercept_ for clf in self.clf]
+        
         return weights
 
     def save(self, path: str):
