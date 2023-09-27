@@ -54,6 +54,13 @@ class FACSIMILE(BaseEstimator):
         else:
             self.item_names = None
 
+        # Same for y to get factor names
+        if isinstance(y, pd.DataFrame):
+            self.factor_names = y.columns
+        else:
+            # Create default factor names
+            self.factor_names = ["Factor {}".format(i + 1) for i in range(y.shape[1])]
+
         # Extract values from X and y if they are dataframes
         if isinstance(X, pd.DataFrame):
             X = X.values
@@ -102,7 +109,7 @@ class FACSIMILE(BaseEstimator):
 
         return self
 
-    def predict(self, X: Union[pd.DataFrame, ArrayLike]) -> np.ndarray:
+    def predict(self, X: Union[pd.DataFrame, ArrayLike]) -> pd.DataFrame:
         """
         Predict the factor scores for a given set of item responses.
 
@@ -110,12 +117,12 @@ class FACSIMILE(BaseEstimator):
             X (Union[pd.DataFrame, ArrayLike]): Item responses.
 
         Returns:
-            ArrayLike: Predicted factor scores.
+            pd.DataFrame: Predicted factor scores.
         """
 
         return self.predict_reduced(X.iloc[:, self.included_items])
 
-    def predict_reduced(self, X: Union[pd.DataFrame, ArrayLike]) -> np.ndarray:
+    def predict_reduced(self, X: Union[pd.DataFrame, ArrayLike]) -> pd.DataFrame:
         """
         Predict the factor scores for a given set of item responses,
         using only the items identified by the item reduction procedure.
@@ -123,6 +130,10 @@ class FACSIMILE(BaseEstimator):
         Args:
             X (Union[pd.DataFrame, ArrayLike]): Responses for the items included
             in the item reduction procedure.
+
+        Returns:
+            pd.DataFrame: Predicted factor scores.
+
         """
 
         # Extract values from X if it is a dataframe
@@ -140,6 +151,9 @@ class FACSIMILE(BaseEstimator):
             # Store predictions
             pred[:, var] = y_pred
 
+        # Convert to dataframe with factor names
+        pred = pd.DataFrame(pred, columns=self.factor_names)
+
         return pred
 
     def get_weights(self, factor_names: List[str] = None) -> pd.DataFrame:
@@ -156,7 +170,7 @@ class FACSIMILE(BaseEstimator):
 
         # If no factor names are provided, use default
         if factor_names is None:
-            factor_names = ["Factor {}".format(i + 1) for i in range(3)]
+            factor_names = self.factor_names
 
         # Get the weights from each classifier
         weights = [clf.coef_ for clf in self.clf]

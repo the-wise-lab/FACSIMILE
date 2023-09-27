@@ -8,6 +8,10 @@ from .utils import tqdm_joblib
 from functools import partial
 from joblib import Parallel, delayed
 from tqdm import tqdm
+from typing import Optional, Tuple, Dict
+import matplotlib.pyplot as plt
+from numpy.polynomial.polynomial import Polynomial
+from matplotlib import cm
 
 
 def evaluate_facsimile(
@@ -248,3 +252,78 @@ class FACSIMILEOptimiser:
         clf = FACSIMILE(alphas=best_alphas)
 
         return clf
+
+    def plot_results(
+        self,
+        degree: Optional[int] = 3,
+        figsize: Tuple[int, int] = (10, 6),
+        cmap: Optional[str] = None,
+        scatter_kws: Optional[Dict] = None,
+        line_kws: Optional[Dict] = None,
+        figure_kws: Optional[Dict] = None
+    ) -> None:
+        """
+        Plots the results of the optimization procedure, showing the R2 values for each
+        factor as a function of the number of items included.
+
+        Args:
+            degree (Optional[int], optional): The degree of the polynomial for
+                regression fitting. If None, no line is fitted or plotted.
+                Defaults to 3.
+            figsize (Tuple[int, int], optional): The size of the figure
+                to be plotted. Defaults to (10,6).
+            cmap (Optional[str], optional): The name of a colormap to generate colors for
+                scatter points and lines. If None, uses the Matplotlib default color cycle.
+                Defaults to None.
+            scatter_kws (Optional[Dict], optional): Additional keyword arguments for plt.scatter.
+                Defaults to None.
+            line_kws (Optional[Dict], optional): Additional keyword arguments for plt.plot.
+                Defaults to None.
+            figure_kws (Optional[Dict], optional): Additional keyword arguments for plt.figure.
+                Defaults to None.
+                
+        Returns:
+            None: Displays the plot.
+        """
+        df = self.results_
+        scatter_kws = {} if scatter_kws is None else scatter_kws
+        line_kws = {} if line_kws is None else line_kws
+        figure_kws = {} if figure_kws is None else figure_kws
+
+        # Creating a figure
+        plt.figure(figsize=figsize, **figure_kws)
+
+        # Inferring Y variables from DataFrame columns
+        y_vars = [col for col in df.columns if col.startswith("r2_")]
+
+        # Getting the colormap if provided
+        if cmap:
+            colors = cm.get_cmap(cmap, len(y_vars))
+
+        for i, y_var in enumerate(y_vars):
+            color = colors(i) if cmap else None
+            # Scatter plot for each Y variable
+            plt.scatter(
+                df["n_items"],
+                df[y_var],
+                label=f'{y_var.split("r2_")[1]}',
+                alpha=0.6,
+                color=color,
+                **scatter_kws,
+            )
+
+            if degree is not None:
+                # Fit the model
+                p = Polynomial.fit(df["n_items"], df[y_var], degree)
+
+                # Plot the regression line for each Y variable
+                x = np.linspace(df["n_items"].min(), df["n_items"].max(), 400)
+                y = p(x)
+                plt.plot(x, y, linewidth=2, color=color, **line_kws)
+
+        # Labeling the plot
+        plt.xlabel("Number of items")
+        plt.ylabel(r"$R^2$")
+        plt.legend() 
+        plt.tight_layout()
+        plt.show()
