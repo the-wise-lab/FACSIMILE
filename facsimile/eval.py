@@ -286,7 +286,7 @@ class FACSIMILEOptimiser:
             None: Displays the plot.
         """
         df = self.results_
-        scatter_kws = {} if scatter_kws is None else scatter_kws
+        scatter_kws = {'alpha': 0.6} if scatter_kws is None else scatter_kws
         line_kws = {} if line_kws is None else line_kws
         figure_kws = {} if figure_kws is None else figure_kws
 
@@ -307,7 +307,6 @@ class FACSIMILEOptimiser:
                 df["n_items"],
                 df[y_var],
                 label=f'{y_var.split("r2_")[1]}',
-                alpha=0.6,
                 color=color,
                 **scatter_kws,
             )
