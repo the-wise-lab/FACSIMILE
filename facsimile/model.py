@@ -10,7 +10,7 @@ import numpy as np
 
 
 class FACSIMILE(BaseEstimator):
-    def __init__(self, alphas: Tuple[float], bias_correction: bool = True) -> None:
+    def __init__(self, alphas: Tuple[float]) -> None:
         """
         FACtor Score IteM reductIon with Lasso Estimator (FACSIMILE) class.
 
