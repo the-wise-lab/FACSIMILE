@@ -24,7 +24,7 @@ def evaluate_facsimile(
     """
     Evaluate the item reduction model for a given set of alphas.
 
-    The overall score is defined as the minimum R2 value across the 3 factors, multiplied by 1 minus the number of
+    The overall score is defined as the minimum R2 value across the factors, multiplied by 1 minus the number of
     included items divided by the total number of items. This ensures that it selects a model with a good fit, but
     also with a small number of items.
 
@@ -43,17 +43,23 @@ def evaluate_facsimile(
     clf = FACSIMILE(alphas=alphas)
 
     # Fit and predict
-    clf.fit(X_train, y_train)
-    pred_val = clf.predict(X_val)
+    try:
+        clf.fit(X_train, y_train)
+        pred_val = clf.predict(X_val)
 
-    # Get R2 for each variable
-    r2 = r2_score(y_val, pred_val, multioutput="raw_values")
+        # Get R2 for each variable
+        r2 = r2_score(y_val, pred_val, multioutput="raw_values")
 
-    # Store number included items
-    n_items = clf.n_included_items
+        # Store number included items
+        n_items = clf.n_included_items
 
-    # Get score accounting for n_included_items and minumum r2
-    score = np.min(r2) * (1 - clf.n_included_items / X_train.shape[1])
+        # Get score accounting for n_included_items and minumum r2
+        score = np.min(r2) * (1 - clf.n_included_items / X_train.shape[1])
+    except Exception as e:
+        print('WARNING: Fitting failed. Error:')
+        print(e)
+        score = n_items = np.nan
+        r2 = np.ones(y_val.shape[1]) * np.nan
 
     return score, r2, n_items
 

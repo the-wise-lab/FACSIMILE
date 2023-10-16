@@ -61,6 +61,9 @@ class FACSIMILE(BaseEstimator):
             # Create default factor names
             self.factor_names = ["Factor {}".format(i + 1) for i in range(y.shape[1])]
 
+        # Get the number of factors
+        self.n_factors = len(self.factor_names)
+
         # Extract values from X and y if they are dataframes
         if isinstance(X, pd.DataFrame):
             X = X.values
@@ -74,10 +77,10 @@ class FACSIMILE(BaseEstimator):
         # Run the classifiers for each factor to determine which items will be kept
         # This is slightly awkward because we end up running the classifiers twice,
         # once to determine which items to keep, and once to fit the final model.
-        clf_included_items = np.zeros((3, X.shape[1]))
+        clf_included_items = np.zeros((self.n_factors, X.shape[1]))
 
-        # Loop over the 3 factors
-        for var in range(3):
+        # Loop over the factors
+        for var in range(self.n_factors):
             # Set up lasso regression with given alpha for this factor
             clf = Lasso(alpha=self.alphas[var])
             # Fit the model
@@ -96,7 +99,7 @@ class FACSIMILE(BaseEstimator):
         self.n_included_items = self.included_items.sum()
 
         # Fit a new, unregularised model using all the items included in at least one factor
-        for var in range(3):
+        for var in range(self.n_factors):
             # Set up linear regression
             # We don't need regularisation here because we have already selected the items
             clf = LinearRegression()
@@ -141,10 +144,10 @@ class FACSIMILE(BaseEstimator):
             X = X.values
 
         # Array to store predictions
-        pred = np.zeros((X.shape[0], 3))
+        pred = np.zeros((X.shape[0], self.n_factors))
 
         # Predict factor scores
-        for var in range(3):
+        for var in range(self.n_factors):
             # Predict factor scores
             y_pred = self.clf[var].predict(X)
 
