@@ -70,6 +70,10 @@ def plot_predictions(
         **figure_kws,
     )
 
+    # If a single axis is returned, convert to array
+    if not isinstance(ax, np.ndarray):
+        ax = np.array([ax])
+
     # If no palette is provided, use matplotlib default
     if palette is None:
         palette = [
