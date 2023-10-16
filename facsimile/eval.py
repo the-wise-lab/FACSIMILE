@@ -323,6 +323,11 @@ class FACSIMILEOptimiser:
         # Labeling the plot
         plt.xlabel("Number of items")
         plt.ylabel(r"$R^2$")
-        plt.legend() 
+        legend = plt.legend() 
+
+        # Update alpha for legend handles
+        for lh in legend.legendHandles:
+            lh.set_alpha(1)  # Set alpha to 1
+
         plt.tight_layout()
         plt.show()
