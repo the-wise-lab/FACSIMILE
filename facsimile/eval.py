@@ -20,6 +20,7 @@ def evaluate_facsimile(
     X_val: Union[pd.DataFrame, ArrayLike],
     y_val: Union[pd.DataFrame, ArrayLike],
     alphas: Tuple[float],
+    fit_intercept: bool = True,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Evaluate the item reduction model for a given set of alphas.
@@ -34,13 +35,14 @@ def evaluate_facsimile(
         X_val (ArrayLike): Item responses for validation.
         y_val (ArrayLike): Factor scores for validation.
         alphas (Tuple[float]): Alpha values for the 3 factors.
+        fit_intercept (bool, optional): Whether to fit an intercept. Defaults to True.
 
     Returns:
         Tuple[np.ndarray, np.ndarray, np.ndarray]: Tuple containing the score, R2 and number of included items.
     """
 
     # Set up model
-    clf = FACSIMILE(alphas=alphas)
+    clf = FACSIMILE(alphas=alphas, fit_intercept=fit_intercept)
 
     # Fit and predict
     try:
@@ -56,7 +58,7 @@ def evaluate_facsimile(
         # Get score accounting for n_included_items and minumum r2
         score = np.min(r2) * (1 - clf.n_included_items / X_train.shape[1])
     except Exception as e:
-        print('WARNING: Fitting failed. Error:')
+        print("WARNING: Fitting failed. Error:")
         print(e)
         score = n_items = np.nan
         r2 = np.ones(y_val.shape[1]) * np.nan
@@ -65,7 +67,13 @@ def evaluate_facsimile(
 
 
 class FACSIMILEOptimiser:
-    def __init__(self, n_iter: int = 100, n_jobs: int = 1, seed: int = 42) -> None:
+    def __init__(
+        self,
+        n_iter: int = 100,
+        fit_intercept: bool = True,
+        n_jobs: int = 1,
+        seed: int = 42,
+    ) -> None:
         """
         Optimise the alpha values for each factor.
 
@@ -80,11 +88,13 @@ class FACSIMILEOptimiser:
 
         Args:
             n_iter (int, optional): Number of iterations to run. Defaults to 100.
+            fit_intercept (bool, optional): Whether to fit an intercept. Defaults to True.
             n_jobs (int, optional): Number of jobs to run in parallel. Defaults to 1.
             seed (int, optional): Random seed. Defaults to 42.
         """
 
         self.n_iter = n_iter
+        self.fit_intercept = fit_intercept
         self.n_jobs = n_jobs
         self.seed = seed
 
@@ -136,6 +146,7 @@ class FACSIMILEOptimiser:
             y_train,
             X_val,
             y_val,
+            fit_intercept=self.fit_intercept,
         )
 
         if self.n_jobs == 1:
@@ -266,7 +277,7 @@ class FACSIMILEOptimiser:
         cmap: Optional[str] = None,
         scatter_kws: Optional[Dict] = None,
         line_kws: Optional[Dict] = None,
-        figure_kws: Optional[Dict] = None
+        figure_kws: Optional[Dict] = None,
     ) -> None:
         """
         Plots the results of the optimization procedure, showing the R2 values for each
@@ -287,12 +298,12 @@ class FACSIMILEOptimiser:
                 Defaults to None.
             figure_kws (Optional[Dict], optional): Additional keyword arguments for plt.figure.
                 Defaults to None.
-                
+
         Returns:
             None: Displays the plot.
         """
         df = self.results_
-        scatter_kws = {'alpha': 0.6} if scatter_kws is None else scatter_kws
+        scatter_kws = {"alpha": 0.6} if scatter_kws is None else scatter_kws
         line_kws = {} if line_kws is None else line_kws
         figure_kws = {} if figure_kws is None else figure_kws
 
@@ -329,7 +340,7 @@ class FACSIMILEOptimiser:
         # Labeling the plot
         plt.xlabel("Number of items")
         plt.ylabel(r"$R^2$")
-        legend = plt.legend() 
+        legend = plt.legend()
 
         # Update alpha for legend handles
         for lh in legend.legendHandles:

@@ -10,7 +10,7 @@ import numpy as np
 
 
 class FACSIMILE(BaseEstimator):
-    def __init__(self, alphas: Tuple[float]) -> None:
+    def __init__(self, alphas: Tuple[float], fit_intercept:bool=True) -> None:
         """
         FACtor Score IteM reductIon with Lasso Estimator (FACSIMILE) class.
 
@@ -19,6 +19,7 @@ class FACSIMILE(BaseEstimator):
 
         Args:
             alphas (Tuple[float]): Tuple of alpha values for each factor.
+            fit_intercept (bool, optional): Whether to fit an intercept. Defaults to True.
         """
 
         # Get number of factors
@@ -27,6 +28,8 @@ class FACSIMILE(BaseEstimator):
         self.alphas = alphas
         # Store the included items
         self.included_items = None
+        # Store whether to fit an intercept
+        self.fit_intercept = fit_intercept
 
         # Store classifiers
         self.clf = []
@@ -82,7 +85,7 @@ class FACSIMILE(BaseEstimator):
         # Loop over the factors
         for var in range(self.n_factors):
             # Set up lasso regression with given alpha for this factor
-            clf = Lasso(alpha=self.alphas[var])
+            clf = Lasso(alpha=self.alphas[var], fit_intercept=self.fit_intercept)
             # Fit the model
             clf.fit(X, y[:, var])
             # Store the included items
