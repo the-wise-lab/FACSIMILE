@@ -41,7 +41,6 @@ def test_alpha_values():
     prev_sum = 20
 
     for alpha in [0.001, 0.3, 0.5]:
-
         # Create a model
         model = FACSIMILE(alphas=[alpha, alpha])
 

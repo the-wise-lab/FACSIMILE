@@ -57,7 +57,6 @@ def test_evaluate_facsimile_with_pandas_data():
 
 
 def test_evaluate_facsimile_with_fitting_failure():
-
     X_train = np.random.rand(100, 10)
     y_train = np.random.rand(100, 3)
     X_val = np.random.rand(20, 10)
