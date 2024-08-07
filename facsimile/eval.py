@@ -305,9 +305,9 @@ class FACSIMILEOptimiser:
 
         Args:
             metric (str, optional): Metric to use to select the best
-                classifier. Defaults to 'scores'.
+                classifier. Defaults to `'scores'`.
             highest_best (bool, optional): Whether higher values of the metric
-                are better. Defaults to True.
+                are better. Defaults to `True`.
 
         Returns:
             FACSIMILE: Best classifier.
