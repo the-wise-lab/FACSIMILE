@@ -1,0 +1,31 @@
+[data-md-color-scheme="default"] {
+    --doc-symbol-parameter-fg-color: #df50af;
+    --doc-symbol-attribute-fg-color: #0079ff;
+    --doc-symbol-function-fg-color: #001edf;
+    --doc-symbol-method-fg-color: #db00df;
+    --doc-symbol-class-fg-color: #dd8f00;
+    --doc-symbol-module-fg-color: #ff0060;
+  
+    --doc-symbol-parameter-bg-color: #df50af1a;
+    --doc-symbol-attribute-bg-color: #0079ff1a;
+    --doc-symbol-function-bg-color: #00dfa21a;
+    --doc-symbol-method-bg-color: #00dfa21a;
+    --doc-symbol-class-bg-color: #d1b6191a;
+    --doc-symbol-module-bg-color: #ff00601a;
+  }
+  
+  [data-md-color-scheme="slate"] {
+    --doc-symbol-parameter-fg-color: #df50af;
+    --doc-symbol-attribute-fg-color: #6fb2ff;
+    --doc-symbol-function-fg-color: #9cb8ff;
+    --doc-symbol-method-fg-color: #db00df;
+    --doc-symbol-class-fg-color: #dd8f00;
+    --doc-symbol-module-fg-color: #ff72a8;
+  
+    --doc-symbol-parameter-bg-color: #ffa8cc1a;
+    --doc-symbol-attribute-bg-color: #963fb81a;
+    --doc-symbol-function-bg-color: #6d67e41a;
+    --doc-symbol-method-bg-color: #6d67e41a;
+    --doc-symbol-class-bg-color: #46c2cb1a;
+    --doc-symbol-module-bg-color: #f2f7a11a;
+  }
