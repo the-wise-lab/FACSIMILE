@@ -134,15 +134,15 @@ def check_directories():
 
     Raises:
         RuntimeError: If the script is not run from the root directory
-        or if the `'data'` directory is empty.
+            or if the `'data'` directory is empty.
     """
     # Check if the 'notebooks' directory exists
     if not os.path.isdir("notebooks"):
         # If we're currently in a subdirectory of the "notebooks", move
         # two directories up
-        if os.path.isdir("../notebooks"):
+        if os.path.isdir("../examples"):
             print("Changing directory to root directory of repository...")
-            os.chdir("..")
+            os.chdir("../..")
         else:
             raise RuntimeError(
                 "You must run this notebook from the root directory of the "

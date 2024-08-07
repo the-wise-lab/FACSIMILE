@@ -194,8 +194,7 @@ class FACSIMILE(BaseEstimator):
 
         Args:
             target_names (List[str], optional): List of target variable names.
-            Defaults
-                to `None`.
+                Defaults to `None`.
 
         Returns:
             pd.DataFrame: A dataframe containing the classifier weights.

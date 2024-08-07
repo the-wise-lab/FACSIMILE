@@ -1,0 +1,71 @@
+site_name: FACSIMILE documentation
+
+nav:
+    - Home: index.md
+    - Reference:
+      - eval: reference/eval.md
+      - model: reference/model.md
+      - plotting: reference/plotting.md
+      - utils: reference/utils.md
+    - Examples: 
+      - Tutorial: examples/tutorial.ipynb
+      - Usage: examples/sticsa_example.ipynb
+
+plugins:
+  - mkdocstrings:
+      handlers:
+        python:
+          import:
+          - https://docs.python.org/3/objects.inv
+          - https://installer.readthedocs.io/en/stable/objects.inv  # demonstration purpose in the docs
+          - https://mkdocstrings.github.io/autorefs/objects.inv
+          - https://www.mkdocs.org/objects.inv
+          - https://python-markdown.github.io/objects.inv
+          paths: [src]
+          options:
+            docstring_options:
+              ignore_init_summary: true
+            docstring_section_style: list
+            filters: ["!^_"]
+            # heading_level: 1
+            inherited_members: true
+            merge_init_into_class: true
+            parameter_headings: true
+            separate_signature: true
+            show_root_heading: true
+            show_root_full_path: false
+            show_signature_annotations: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            signature_crossrefs: true
+            summary: true
+  - mkdocs-jupyter:
+      execute: false
+      allow_errors: true
+      include_requirejs: true
+      custom_mathjax_url: "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML-full,Safe"
+
+theme:
+  name: "material"
+  palette: 
+    - scheme: default
+      primary: blue
+      toggle:
+        icon: material/brightness-2
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+extra_css:
+- css/mkdocstrings.css
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+
+repo_url: https://github.com/the-wise-lab/FACSIMILE
+repo_name: the-wise-lab/FACSIMILE
