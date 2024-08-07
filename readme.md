@@ -20,7 +20,11 @@ cd FACSIMILE
 pip install .
 ```
 
-## Usage
+## Documentation
+
+Documentation and examples are available a [https://facsimile.thewiselab.org](https://facsimile.thewiselab.org).
+
+## Basic usage
 
 The package can be used to select items and approximate scores for a given dataset. In general, the simplest way to do this is to use the provided optimisation methods, which will evaluate the performance of different levels of regularisation (resulting in different numbers of items being included).
 
