@@ -1,5 +1,11 @@
 # FACtor Score IteM reductIon with Lasso Estimator (FACSIMILE)
 
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/the-wise-lab/FACSIMILE/python-app.yml)
+[![Python version](https://img.shields.io/badge/Python-3.10-3776AB.svg?style=flat&logo=python&logoColor=white)]((https://www.python.org/))
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
+
+
 This package implements the FACSIMILE method for approximating sum scores, subscale scores, or factor scores based on reduced item sets. Given a scenario where a large number of items are available to measure a latent trait, FACSIMILE selects a subset of items that can be used to approximate the variable that would be obtained if all items were used.
 
 The method uses Lasso-regularised regression to select items that are most predictive of the scores, and determine coefficients for the selected items that can be used to approximate the scores.
