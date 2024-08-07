@@ -1,0 +1,35 @@
+
+lines.linewidth: 1
+lines.solid_capstyle: butt
+
+legend.fancybox: true
+
+#axes.prop_cycle: cycler('color', ['274ed3', 'b533cc', '4a4c54', '2a327c', 'f2ae54', '303030'])
+#axes.prop_cycle: cycler('color', ['2782e3', 'd12869', 'dea114', '2a327c', 'f2ae54', '303030'])
+axes.prop_cycle: cycler('color', ['0073FE', 'd910B6', 'dea114', '2a327c', 'f2ae54', '303030'])
+axes.facecolor: fafafa
+
+
+savefig.edgecolor: fafafa
+savefig.facecolor: fafafa
+
+figure.subplot.left: 0.08
+figure.subplot.right: 0.95
+figure.subplot.bottom: 0.07
+figure.facecolor: fafafa
+figure.dpi: 80
+
+
+lines.color: 383838
+patch.edgecolor: 383838
+
+text.color: 383838
+
+axes.edgecolor: 383838
+axes.labelcolor: 383838
+
+xtick.color: 616161
+ytick.color: 616161
+
+font.family: heebo
+font.weight: regular

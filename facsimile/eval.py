@@ -1,17 +1,38 @@
-from numpy.typing import ArrayLike
+from functools import partial
+from typing import Dict, Optional, Tuple, Union
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from joblib import Parallel, delayed
+from matplotlib import cm
+from numpy.polynomial.polynomial import Polynomial
+from numpy.typing import ArrayLike
 from sklearn.metrics import r2_score
-from typing import Tuple, Union
+from tqdm import tqdm
+
 from .model import FACSIMILE
 from .utils import tqdm_joblib
-from functools import partial
-from joblib import Parallel, delayed
-from tqdm import tqdm
-from typing import Optional, Tuple, Dict
-import matplotlib.pyplot as plt
-from numpy.polynomial.polynomial import Polynomial
-from matplotlib import cm
+
+
+def calculate_score(
+    r2: Union[np.ndarray, list], n_included_items: int, n_features: int
+) -> float:
+    """
+    Calculate the score accounting for the number of included items and minimum
+    r2.
+
+    Args:
+        r2 (Union[np.ndarray, list]): Array or list of r2 values.
+        n_included_items (int): Number of included items in the classifier.
+        n_features (int): Number of features in the training data.
+
+    Returns:
+        float: Calculated score.
+    """
+    r2_array = np.array(r2)
+    score = np.min(r2_array) * (1 - n_included_items / n_features)
+    return score
 
 
 def evaluate_facsimile(
@@ -21,49 +42,78 @@ def evaluate_facsimile(
     y_val: Union[pd.DataFrame, ArrayLike],
     alphas: Tuple[float],
     fit_intercept: bool = True,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    additional_metrics: Optional[Dict[str, callable]] = None,
+) -> Tuple[float, np.ndarray, int]:
     """
     Evaluate the item reduction model for a given set of alphas.
 
-    The overall score is defined as the minimum R2 value across the factors, multiplied by 1 minus the number of
-    included items divided by the total number of items. This ensures that it selects a model with a good fit, but
-    also with a small number of items.
+    The overall score is defined as the minimum R^2 value across the target
+    variables, multiplied by 1 minus the number of included items divided by
+    the total number of items. This ensures that it selects a model with a good
+    fit, but also with a small number of items.
 
     Args:
-        X_train (ArrayLike): Item responses for training.
-        y_train (ArrayLike): Factor scores for training.
-        X_val (ArrayLike): Item responses for validation.
-        y_val (ArrayLike): Factor scores for validation.
-        alphas (Tuple[float]): Alpha values for the 3 factors.
-        fit_intercept (bool, optional): Whether to fit an intercept. Defaults to True.
+        X_train (Union[pd.DataFrame, ArrayLike]): Item responses for
+            training.
+        y_train (Union[pd.DataFrame, ArrayLike]): Target scores for
+            training.
+        X_val (Union[pd.DataFrame, ArrayLike]): Item responses for
+            validation.
+        y_val (Union[pd.DataFrame, ArrayLike]): Target scores for
+            validation.
+        alphas (Tuple[float]): Alpha values for the targets.
+        fit_intercept (bool, optional): Whether to fit an intercept.
+            Defaults to `True`.
+        additional_metrics (Optional[Dict[str, callable]], optional):
+            Dictionary of additional metrics to calculate. These should be
+            supplied as functions that take the true and predicted values as
+            arguments and return a single value. Defaults to `None`.
 
     Returns:
-        Tuple[np.ndarray, np.ndarray, np.ndarray]: Tuple containing the score, R2 and number of included items.
+        Tuple[float, np.ndarray, int]: Tuple containing the score, R2 and
+            number of included items.
     """
 
     # Set up model
     clf = FACSIMILE(alphas=alphas, fit_intercept=fit_intercept)
 
+    # Dictionary to store metrics
+    metrics = {}
+
     # Fit and predict
     try:
         clf.fit(X_train, y_train)
+
         pred_val = clf.predict(X_val)
 
         # Get R2 for each variable
         r2 = r2_score(y_val, pred_val, multioutput="raw_values")
 
+        # Add r2 to metrics
+        metrics["r2"] = r2
+
+        # Get other metrics
+        if additional_metrics is not None:
+            for metric_name, metric_func in additional_metrics.items():
+                metric_value = metric_func(y_val, pred_val)
+                metrics[metric_name] = metric_value
+
         # Store number included items
         n_items = clf.n_included_items
 
         # Get score accounting for n_included_items and minumum r2
-        score = np.min(r2) * (1 - clf.n_included_items / X_train.shape[1])
+        score = calculate_score(r2, clf.n_included_items, X_train.shape[1])
+
+        # Add score to metrics
+        metrics["score"] = score
+
     except Exception as e:
         print("WARNING: Fitting failed. Error:")
         print(e)
-        score = n_items = np.nan
-        r2 = np.ones(y_val.shape[1]) * np.nan
+        n_items = np.nan
+        metrics = {k: np.nan for k in ["score", "r2"] + list(metrics.keys())}
 
-    return score, r2, n_items
+    return metrics, n_items
 
 
 class FACSIMILEOptimiser:
@@ -73,30 +123,55 @@ class FACSIMILEOptimiser:
         fit_intercept: bool = True,
         n_jobs: int = 1,
         seed: int = 42,
+        alpha_dist_scaling: float = 1,
+        additional_metrics: Optional[Dict[str, callable]] = None,
     ) -> None:
         """
-        Optimise the alpha values for each factor.
+        Optimise the alpha values for each target.
 
-        The procedure estimates a "score" for each set of alpha values which balances
-        accuracy (R^2) with parsimony (number of items included). The score is defined
-        as the minimum R^2 value across the 3 factors, multiplied by 1 minus the number of
-        included items divided by the total number of items. This ensures that it selects
-        a model with a good fit, but also with a small number of items.
+        The procedure estimates a "score" for each set of alpha values which
+        balances accuracy (R^2) with parsimony (number of items included). The
+        score is defined as the minimum R^2 value across the target variables,
+        multiplied by 1 minus the number of included items divided by the total
+        number of items. This ensures that it selects a model with a good fit,
+        but also with a small number of items.
 
-        It also returns R^2 values for each factor, the minimum R^2 value, the number of
-        included items, and the alpha values for each factor.
+        It also returns R^2 values for each target, the minimum R^2 value, the
+        number of included items, and the alpha values for each target.
 
         Args:
-            n_iter (int, optional): Number of iterations to run. Defaults to 100.
-            fit_intercept (bool, optional): Whether to fit an intercept. Defaults to True.
-            n_jobs (int, optional): Number of jobs to run in parallel. Defaults to 1.
-            seed (int, optional): Random seed. Defaults to 42.
+            n_iter (int, optional): Number of iterations to run. Defaults to
+                `100`.
+            fit_intercept (bool, optional): Whether to fit an intercept.
+                Defaults to `True`.
+            n_jobs (int, optional): Number of jobs to run in parallel. Defaults
+                to `1`.
+            seed (int, optional): Random seed. Defaults to `42`.
+            alpha_dist_scaling (float, optional): Scaling factor for the
+                distribution of alpha (regularisation parameter) values. By
+                default, alpha values are sampled from a beta distribution that
+                is skewed towards zero. This parameter allows this distribution
+                to be scaled, which may be more appropriate for certain
+                datasets. Defaults to `1`.
+            additional_metrics (Optional[Dict[str, callable]], optional):
+                Dictionary of additional metrics to calculate, in addition to
+                the penalised score and R^2. These should be supplied as
+                functions that take the true and predicted values as arguments
+                and return a single value. Defaults to `None`.
         """
 
         self.n_iter = n_iter
         self.fit_intercept = fit_intercept
         self.n_jobs = n_jobs
         self.seed = seed
+        self.alpha_dist_scaling = alpha_dist_scaling
+
+        # Check additional metrics are callable
+        if additional_metrics is not None:
+            for metric in additional_metrics.values():
+                assert callable(metric), "Additional metrics must be callable."
+
+        self.additional_metrics = additional_metrics
 
     def fit(
         self,
@@ -104,40 +179,49 @@ class FACSIMILEOptimiser:
         y_train: Union[pd.DataFrame, ArrayLike],
         X_val: Union[pd.DataFrame, ArrayLike],
         y_val: Union[pd.DataFrame, ArrayLike],
-        factor_names: Tuple[str] = None,
+        target_names: Tuple[str] = None,
     ) -> None:
         """
-        Optimise the alpha values for each factor.
+        Optimise the alpha values for each target.
 
-        The results of the procedure are stored in the `results_` attribute as a
-        dataframe. Columns are: Run number, R^2 for each factor, minimum R^2, score,
-        number of included items, alpha values for each factor.
+        The results of the procedure are stored in the `results_` attribute as
+        a dataframe. Columns are: Run number, R^2 for each target, minimum R^2,
+        score, number of included items, alpha values for each target.
+
+        If other metrics are provided, these are also stored in the dataframe.
+        The minimum value for each metric across the Y variables is also
+        stored.
 
         Args:
-            X_train (Union[pd.DataFrame, ArrayLike]): Item responses for training.
-            y_train (Union[pd.DataFrame, ArrayLike]): Factor scores for training.
-            X_val (Union[pd.DataFrame, ArrayLike]): Item responses for validation.
-            y_val (Union[pd.DataFrame, ArrayLike]): Factor scores for validation.
-            factor_names (Tuple[str], optional): Names of the factors. Defaults to None.
+            X_train (Union[pd.DataFrame, ArrayLike]): Item responses for
+                training.
+            y_train (Union[pd.DataFrame, ArrayLike]): Target scores for
+                training.
+            X_val (Union[pd.DataFrame, ArrayLike]): Item responses for
+                validation.
+            y_val (Union[pd.DataFrame, ArrayLike]): Target scores for
+                validation.
+            target_names (Tuple[str], optional): Names of the target variables.
+                Defaults to `None`.
 
         """
 
         # Set up RNG
         rng = np.random.default_rng(self.seed)
 
-        # Get number of factors
-        n_factors = y_train.shape[1]
+        # Get number of targets
+        n_targets = y_train.shape[1]
 
-        # Check factor names are correct length
-        if factor_names is not None:
+        # Check target names are correct length
+        if target_names is not None:
             assert (
-                len(factor_names) == n_factors
-            ), "Number of factor names must equal number of factors"
+                len(target_names) == n_targets
+            ), "Number of target names must equal number of targets"
         else:
-            factor_names = ["Factor {}".format(i + 1) for i in range(n_factors)]
+            target_names = ["Variable {}".format(i + 1) for i in range(n_targets)]
 
         # Set up alphas
-        alphas = rng.beta(1, 3, size=(self.n_iter, n_factors))
+        alphas = rng.beta(1, 3, size=(self.n_iter, n_targets)) * self.alpha_dist_scaling
 
         # Use partial to set up the function with the data
         evaluate_facsimile_with_data = partial(
@@ -147,6 +231,7 @@ class FACSIMILEOptimiser:
             X_val,
             y_val,
             fit_intercept=self.fit_intercept,
+            additional_metrics=self.additional_metrics,
         )
 
         if self.n_jobs == 1:
@@ -160,20 +245,41 @@ class FACSIMILEOptimiser:
                 )
 
         # Extract results
-        scores = np.stack([i[0] for i in results])
-        r2s = np.stack([i[1] for i in results])
-        n_items = np.stack([i[2] for i in results])
+        scores = np.array([i[0]["score"] for i in results])
+        r2s = np.stack([i[0]["r2"] for i in results])
+        n_items = np.stack([i[1] for i in results])
 
+        # Store results in a dataframe
         output_df = {
             "run": range(self.n_iter),
         }
 
-        # Add R2s for each factor
-        for i in range(n_factors):
-            output_df["r2_" + factor_names[i]] = r2s[:, i]
+        # Get additional metrics
+        if self.additional_metrics is not None:
+            for metric_name in self.additional_metrics.keys():
+                metrics = np.stack([i[0][metric_name] for i in results])
+                for i in range(n_targets):
+                    output_df[metric_name + "_" + target_names[i]] = metrics[:, i]
+
+        # Add R2s for each target
+        for i in range(n_targets):
+            output_df["r2_" + target_names[i]] = r2s[:, i]
 
         # Add minimum R2
         output_df["min_r2"] = r2s.min(axis=1)
+
+        # Add maximum R2
+        output_df["max_r2"] = r2s.max(axis=1)
+
+        # Add minimum and maximum for other metrics
+        if self.additional_metrics is not None:
+            for metric_name in self.additional_metrics.keys():
+                output_df["min_" + metric_name] = np.min(
+                    np.stack([i[0][metric_name] for i in results]), axis=1
+                )
+                output_df["max_" + metric_name] = np.max(
+                    np.stack([i[0][metric_name] for i in results]), axis=1
+                )
 
         # Add scores
         output_df["scores"] = scores
@@ -182,20 +288,26 @@ class FACSIMILEOptimiser:
         output_df["n_items"] = n_items
 
         # Add alpha values
-        for i in range(n_factors):
-            output_df["alpha_" + factor_names[i]] = alphas[:, i]
+        for i in range(n_targets):
+            output_df["alpha_" + target_names[i]] = alphas[:, i]
 
         output_df = pd.DataFrame(output_df)
 
         self.results_ = output_df
 
-    def get_best_classifier(self, metric: str = "scores") -> FACSIMILE:
+    def get_best_classifier(
+        self, metric: str = "scores", highest_best: bool = True
+    ) -> FACSIMILE:
         """
-        Get the best classifier based on the optimisation results, i.e. the classifier
-        with the highest score (balancing R^2 against number of included items).
+        Get the best classifier based on the optimisation results, i.e. the
+        classifier with the highest score (balancing R^2 against number of
+        included items).
 
         Args:
-            metric (str, optional): Metric to use to select the best classifier. Defaults to 'scores'.
+            metric (str, optional): Metric to use to select the best
+                classifier. Defaults to 'scores'.
+            highest_best (bool, optional): Whether higher values of the metric
+                are better. Defaults to True.
 
         Returns:
             FACSIMILE: Best classifier.
@@ -206,7 +318,7 @@ class FACSIMILEOptimiser:
                 "Optimisation results not available. Please run fit() first."
             )
 
-        if not metric in self.results_.columns:
+        if metric not in self.results_.columns:
             raise ValueError(
                 "Metric not available. Please choose from: {}".format(
                     ", ".join(self.results_.columns)
@@ -214,7 +326,21 @@ class FACSIMILEOptimiser:
             )
 
         # Get index of best classifier
-        best_idx = self.results_[metric].argmax()
+        if highest_best:
+            best_idx = self.results_[metric].argmax()
+        else:
+            best_idx = self.results_[metric].argmin()
+
+        # Print out information about this classifier
+        print("Best classifier:")
+        print(
+            r"Minimum R^2: {value}".format(value=self.results_.iloc[best_idx]["min_r2"])
+        )
+        print(
+            r"Number of included items: {value}".format(
+                value=self.results_.iloc[best_idx]["n_items"]
+            )
+        )
 
         # Get alpha values for best classifier
         best_alphas = self.results_.iloc[best_idx][
@@ -227,16 +353,23 @@ class FACSIMILEOptimiser:
         return clf
 
     def get_best_classifier_max_items(
-        self, max_items: int = 100, metric: str = "min_r2"
+        self,
+        max_items: int = 100,
+        metric: str = "scores",
+        highest_best: bool = True,
     ) -> FACSIMILE:
         """
-        Get the best classifier based on the optimisation results, subject to a maximum
-        number of items being included. For example, if max_items = 100, the best classifier
-        with 100 or fewer items will be returned.
+        Get the best classifier based on the optimisation results, subject to a
+        maximum number of items being included. For example, if `max_items ==
+        100`, the best classifier with `100` or fewer items will be returned.
 
         Args:
-            max_items (int, optional): Maximum number of items. Defaults to 100.
-            metric (str, optional): Metric to use to select the best classifier. Defaults to 'min_r2'.
+            max_items (int, optional): Maximum number of items. Defaults to
+                `100`.
+            metric (str, optional): Metric to use to select the best
+                classifier. Defaults to `'min_r2'`.
+            highest_best (bool, optional): Whether higher values of the metric
+                are better. Defaults to `True`.
 
         Returns:
             FACSIMILE: Best classifier.
@@ -247,7 +380,7 @@ class FACSIMILEOptimiser:
                 "Optimisation results not available. Please run fit() first."
             )
 
-        if not metric in self.results_.columns:
+        if metric not in self.results_.columns:
             raise ValueError(
                 "Metric not available. Please choose from: {}".format(
                     ", ".join(self.results_.columns)
@@ -259,6 +392,79 @@ class FACSIMILEOptimiser:
         best_idx = results_subset[results_subset["n_items"] <= max_items][
             metric
         ].argmax()
+
+        # Get alpha values for best classifier
+        best_alphas = results_subset.iloc[best_idx][
+            [i for i in results_subset.columns if i.startswith("alpha")]
+        ].values
+
+        # Print out information about this classifier
+        print("Best classifier:")
+        print(
+            r"Minimum R^2: {value}".format(value=self.results_.iloc[best_idx]["min_r2"])
+        )
+        print(
+            r"Number of included items: {value}".format(
+                value=self.results_.iloc[best_idx]["n_items"]
+            )
+        )
+
+        # Set up model
+        clf = FACSIMILE(alphas=best_alphas)
+
+        return clf
+
+    def get_best_classifier_n_items(
+        self,
+        n_items: int = 100,
+        metric: str = "scores",
+        highest_best: bool = True,
+    ) -> FACSIMILE:
+        """
+        Get the best classifier based on the optimisation results with a
+        specific number of items. For example, if `n_items = 100`, the best
+        classifier exactly `100` items will be returned.
+
+        > **NOTE**: The optimisation procedure is stochastic, so it is possible
+        that there may not be a classifier with exactly the number of items
+        specified. In this case, an error will be raised.
+
+        Args:
+            n_items (int, optional): Number of items. Defaults to `100`.
+            metric (str, optional): Metric to use to select the best
+                classifier. Defaults to `'min_r2'`.
+            highest_best (bool, optional): Whether higher values of the metric
+                are better. Defaults to `True`.
+
+        Returns:
+            FACSIMILE: Best classifier.
+        """
+
+        if not hasattr(self, "results_"):
+            raise ValueError(
+                "Optimisation results not available. Please run fit() first."
+            )
+
+        if metric not in self.results_.columns:
+            raise ValueError(
+                "Metric not available. Please choose from: {}".format(
+                    ", ".join(self.results_.columns)
+                )
+            )
+
+        if n_items not in self.results_["n_items"].values:
+            # Get the closest number of items
+            closest_n_items = self.results_["n_items"].values[
+                np.argmin(np.abs(self.results_["n_items"].values - n_items))
+            ]
+            raise ValueError(
+                f"No classifier with exactly {n_items} items. Closest "
+                f"number of items is {closest_n_items}."
+            )
+
+        # Get index of best classifier
+        results_subset = self.results_[self.results_["n_items"] == n_items]
+        best_idx = results_subset[results_subset["n_items"] == n_items][metric].argmax()
 
         # Get alpha values for best classifier
         best_alphas = results_subset.iloc[best_idx][
@@ -280,24 +486,24 @@ class FACSIMILEOptimiser:
         figure_kws: Optional[Dict] = None,
     ) -> None:
         """
-        Plots the results of the optimization procedure, showing the R2 values for each
-        factor as a function of the number of items included.
+        Plots the results of the optimization procedure, showing the R^2 values
+        for each target variable as a function of the number of items included.
 
         Args:
             degree (Optional[int], optional): The degree of the polynomial for
-                regression fitting. If None, no line is fitted or plotted.
-                Defaults to 3.
+                regression fitting. If `None`, no line is fitted or plotted.
+                Defaults to `3`.
             figsize (Tuple[int, int], optional): The size of the figure
-                to be plotted. Defaults to (10,6).
-            cmap (Optional[str], optional): The name of a colormap to generate colors for
-                scatter points and lines. If None, uses the Matplotlib default color cycle.
-                Defaults to None.
-            scatter_kws (Optional[Dict], optional): Additional keyword arguments for plt.scatter.
-                Defaults to None.
-            line_kws (Optional[Dict], optional): Additional keyword arguments for plt.plot.
-                Defaults to None.
-            figure_kws (Optional[Dict], optional): Additional keyword arguments for plt.figure.
-                Defaults to None.
+                to be plotted. Defaults to `(10,6)`.
+            cmap (Optional[str], optional): The name of a colormap to generate
+                colors for scatter points and lines. If `None`, uses the
+                Matplotlib default color cycle. Defaults to `None`.
+            scatter_kws (Optional[Dict], optional): Additional keyword
+                arguments for `plt.scatter`. Defaults to `None`.
+            line_kws (Optional[Dict], optional): Additional keyword arguments
+                for `plt.plot`. Defaults to `None`.
+            figure_kws (Optional[Dict], optional): Additional keyword arguments
+                for `plt.figure`. Defaults to `None`.
 
         Returns:
             None: Displays the plot.
@@ -343,7 +549,7 @@ class FACSIMILEOptimiser:
         legend = plt.legend()
 
         # Update alpha for legend handles
-        for lh in legend.legendHandles:
+        for lh in legend.legend_handles:
             lh.set_alpha(1)  # Set alpha to 1
 
         plt.tight_layout()
