@@ -94,16 +94,22 @@ def plot_predictions(
 
     # Plot each target variable
     for i in range(n_targets):
-        ax[i].scatter(x=true[:, i], y=pred[:, i], color=palette[i], **scatter_kws)
+        ax[i].scatter(
+            x=true[:, i], y=pred[:, i], color=palette[i], **scatter_kws
+        )
         ax[i].set_title(
             target_names[i]
-            + "\n$R^2$ = {0}".format(np.round(r2_score(true[:, i], pred[:, i]), 3)),
+            + "\n$R^2$ = {0}".format(
+                np.round(r2_score(true[:, i], pred[:, i]), 3)
+            ),
         )
 
         # Add regression line
         ax[i].plot(
             np.unique(true[:, i]),
-            np.poly1d(np.polyfit(true[:, i], pred[:, i], 1))(np.unique(true[:, i])),
+            np.poly1d(np.polyfit(true[:, i], pred[:, i], 1))(
+                np.unique(true[:, i])
+            ),
             color=palette[i],
             **line_kws,
         )
@@ -123,5 +129,64 @@ def plot_predictions(
 
     if fname is not None:
         plt.savefig(fname, dpi=300)
+
+    plt.show()
+
+
+def plot_weights(
+    data: pd.DataFrame,
+    cmap: str = "RdBu",
+    colorbar_shrink: float = 1,
+    colorbar_aspect: int = 5,
+    figsize: tuple = None,
+    vmin: float = None,
+    vmax: float = None,
+) -> None:
+    """
+    Plot a heatmap of a dataframe representing classifier weights.
+
+    Args:
+        data (pd.DataFrame): The dataframe to plot.
+        cmap (str): The colormap to use for the heatmap. Defaults to 'viridis'.
+        colorbar_shrink (float): The size of the colorbar. Defaults to 1.
+        colorbar_aspect (int): Aspect ratio of the colorbar. Defaults to 20.
+        figsize (tuple): Figure size as (width, height). If None, a default
+            size is determined based on the shape of the dataframe. Defaults
+            to None.
+        vmin (float): Minimum value for the colormap. Defaults to None.
+        vmax (float): Maximum value for the colormap. Defaults to None.
+    """
+
+    # Drop intercept row and copy
+    data = data.copy().drop("Intercept", axis=0).T
+
+    # Get values as numpy array
+    values = data.values
+
+    # Calculate figure size if not specified
+    if figsize is None:
+        figsize = (values.shape[1] / 3, values.shape[0] / 3)
+
+    # Create figure with specified size
+    fig, ax = plt.subplots(figsize=figsize)
+    cax = ax.matshow(values, cmap=cmap, vmin=vmin, vmax=vmax)
+
+    # Add colorbar with shrink and aspect option
+    fig.colorbar(
+        cax, shrink=colorbar_shrink, aspect=colorbar_aspect, label="Weight"
+    )
+
+    # Set axis labels
+    ax.set_xticks(np.arange(data.shape[1]))
+    ax.set_yticks(np.arange(data.shape[0]))
+    ax.set_xticklabels(data.columns)
+    ax.set_yticklabels(data.index)
+
+    # Set x and y labels
+    plt.xlabel("Items")
+    plt.ylabel("Targets")
+
+    # Rotate x labels
+    plt.xticks(rotation=45, ha="left")
 
     plt.show()
