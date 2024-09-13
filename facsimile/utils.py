@@ -47,9 +47,7 @@ def train_validation_test_split(
     val_size: float,
     test_size: float,
     random_seed: int = 42,
-) -> Tuple[
-    np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
-]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Splits X and y data into train/validation/test sets according to given
     split proportions, using a random seed.
@@ -69,9 +67,7 @@ def train_validation_test_split(
     assert (
         train_size + val_size + test_size == 1.0
     ), "Train, validation, and test sizes must add up to 1.0"
-    assert (
-        X.shape[0] == y.shape[0]
-    ), "X and y must have the same number of samples"
+    assert X.shape[0] == y.shape[0], "X and y must have the same number of samples"
 
     X_train_val, X_test, y_train_val, y_test = train_test_split(
         X, y, test_size=test_size, random_state=random_seed
@@ -210,9 +206,7 @@ def download_googlefont(font: str = "Heebo") -> None:
             print(f"Added new font as {font_family_name}")
 
 
-def set_style(
-    style_path: str = "../style.mplstyle", font: str = "Heebo"
-) -> None:
+def set_style(style_path: str = "../style.mplstyle", font: str = "Heebo") -> None:
     """
     Set the Matplotlib style and download the specified font from Google
     Fonts.
