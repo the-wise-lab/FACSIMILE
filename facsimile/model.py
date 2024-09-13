@@ -7,10 +7,13 @@ from numpy.typing import ArrayLike
 from sklearn.base import BaseEstimator
 from sklearn.linear_model import Lasso, LinearRegression
 from importlib.metadata import version
+from .plotting import plot_weights
 
 
 class FACSIMILE(BaseEstimator):
-    def __init__(self, alphas: Tuple[float], fit_intercept: bool = True) -> None:
+    def __init__(
+        self, alphas: Tuple[float], fit_intercept: bool = True
+    ) -> None:
         """
         FACtor Score IteM reductIon with Lasso Estimator (FACSIMILE) class.
 
@@ -71,7 +74,9 @@ class FACSIMILE(BaseEstimator):
             self.target_names = y.columns
         else:
             # Create default target variable names
-            self.target_names = ["Variable {}".format(i + 1) for i in range(y.shape[1])]
+            self.target_names = [
+                "Variable {}".format(i + 1) for i in range(y.shape[1])
+            ]
 
         # Check that the number of targets matches the number of alphas
         if y.shape[1] != self.n_targets:
@@ -100,7 +105,9 @@ class FACSIMILE(BaseEstimator):
         # Loop over the target variables
         for var in range(self.n_targets):
             # Set up lasso regression with given alpha for this target
-            clf = Lasso(alpha=self.alphas[var], fit_intercept=self.fit_intercept)
+            clf = Lasso(
+                alpha=self.alphas[var], fit_intercept=self.fit_intercept
+            )
             # Fit the model
             clf.fit(X, y[:, var])
             # Store the included items
@@ -154,7 +161,9 @@ class FACSIMILE(BaseEstimator):
 
         return self.predict_reduced(X.iloc[:, self.included_items])
 
-    def predict_reduced(self, X: Union[pd.DataFrame, ArrayLike]) -> pd.DataFrame:
+    def predict_reduced(
+        self, X: Union[pd.DataFrame, ArrayLike]
+    ) -> pd.DataFrame:
         """
         Predict the target scores for a given set of item responses, using only
         the items identified by the item reduction procedure.
@@ -228,6 +237,46 @@ class FACSIMILE(BaseEstimator):
         weights.loc["Intercept"] = [clf.intercept_ for clf in self.clf]
 
         return weights
+
+    def plot_weights(
+        self,
+        cmap: str = "viridis",
+        colorbar_shrink: float = 1,
+        colorbar_aspect: int = 5,
+        figsize: tuple = None,
+        vmin: float = None,
+        vmax: float = None,
+    ) -> None:
+        """
+        Plot a heatmap of classifier weights.
+
+        Args:
+            data (pd.DataFrame): The dataframe to plot.
+            cmap (str): The colormap to use for the heatmap. Defaults to
+                'viridis'.
+            colorbar_shrink (float): The size of the colorbar. Defaults to 1.
+            colorbar_aspect (int): Aspect ratio of the colorbar. Defaults to
+                20.
+            figsize (tuple): Figure size as (width, height). If None, a default
+                size is determined based on the shape of the dataframe.
+                Defaults to None.
+            vmin (float): Minimum value for the colormap. Defaults to None.
+            vmax (float): Maximum value for the colormap. Defaults
+        """
+
+        # Get the weights
+        weights = self.get_weights()
+
+        # Plot the weights
+        plot_weights(
+            data=weights,
+            cmap=cmap,
+            colorbar_shrink=colorbar_shrink,
+            colorbar_aspect=colorbar_aspect,
+            figsize=figsize,
+            vmin=vmin,
+            vmax=vmax,
+        )
 
     def save(self, path: str) -> None:
         """

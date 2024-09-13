@@ -218,10 +218,15 @@ class FACSIMILEOptimiser:
                 len(target_names) == n_targets
             ), "Number of target names must equal number of targets"
         else:
-            target_names = ["Variable {}".format(i + 1) for i in range(n_targets)]
+            target_names = [
+                "Variable {}".format(i + 1) for i in range(n_targets)
+            ]
 
         # Set up alphas
-        alphas = rng.beta(1, 3, size=(self.n_iter, n_targets)) * self.alpha_dist_scaling
+        alphas = (
+            rng.beta(1, 3, size=(self.n_iter, n_targets))
+            * self.alpha_dist_scaling
+        )
 
         # Use partial to set up the function with the data
         evaluate_facsimile_with_data = partial(
@@ -259,7 +264,9 @@ class FACSIMILEOptimiser:
             for metric_name in self.additional_metrics.keys():
                 metrics = np.stack([i[0][metric_name] for i in results])
                 for i in range(n_targets):
-                    output_df[metric_name + "_" + target_names[i]] = metrics[:, i]
+                    output_df[metric_name + "_" + target_names[i]] = metrics[
+                        :, i
+                    ]
 
         # Add R2s for each target
         for i in range(n_targets):
@@ -334,7 +341,9 @@ class FACSIMILEOptimiser:
         # Print out information about this classifier
         print("Best classifier:")
         print(
-            r"Minimum R^2: {value}".format(value=self.results_.iloc[best_idx]["min_r2"])
+            r"Minimum R^2: {value}".format(
+                value=self.results_.iloc[best_idx]["min_r2"]
+            )
         )
         print(
             r"Number of included items: {value}".format(
@@ -401,7 +410,9 @@ class FACSIMILEOptimiser:
         # Print out information about this classifier
         print("Best classifier:")
         print(
-            r"Minimum R^2: {value}".format(value=self.results_.iloc[best_idx]["min_r2"])
+            r"Minimum R^2: {value}".format(
+                value=self.results_.iloc[best_idx]["min_r2"]
+            )
         )
         print(
             r"Number of included items: {value}".format(
@@ -464,7 +475,9 @@ class FACSIMILEOptimiser:
 
         # Get index of best classifier
         results_subset = self.results_[self.results_["n_items"] == n_items]
-        best_idx = results_subset[results_subset["n_items"] == n_items][metric].argmax()
+        best_idx = results_subset[results_subset["n_items"] == n_items][
+            metric
+        ].argmax()
 
         # Get alpha values for best classifier
         best_alphas = results_subset.iloc[best_idx][
