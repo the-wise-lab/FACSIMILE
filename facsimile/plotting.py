@@ -18,6 +18,7 @@ def plot_predictions(
     scatter_kws: Optional[Dict] = None,
     line_kws: Optional[Dict] = None,
     figure_kws: Optional[Dict] = None,
+    ax: plt.Axes = None,
 ):
     """
     Plot predicted scores against true scores.
@@ -38,6 +39,7 @@ def plot_predictions(
             regression line. Defaults to `None`.
         figure_kws (Optional[Dict], optional): Keyword arguments to pass to the
             figure. Defaults to `None`.
+        ax (plt.Axes, optional): Axis to plot on. Defaults to `None`.
     """
 
     # Get number of targets
@@ -53,9 +55,7 @@ def plot_predictions(
             len(target_names) == n_targets
         ), "Number of target variable names must equal number of targets"
     else:
-        target_names = [
-            "Variable {}".format(i + 1) for i in range(n_targets)
-        ]
+        target_names = ["Variable {}".format(i + 1) for i in range(n_targets)]
 
     # Set default figure and line keyword arguments if not provided
     if figure_kws is None:
@@ -73,15 +73,24 @@ def plot_predictions(
         )
 
     # Set up figure
-    f, ax = plt.subplots(
-        1,
-        n_targets,
-        **figure_kws,
-    )
+    if ax is None:
+        f, ax = plt.subplots(
+            1,
+            n_targets,
+            **figure_kws,
+        )
 
-    # If a single axis is returned, convert to array
-    if not isinstance(ax, np.ndarray):
-        ax = np.array([ax])
+        # If a single axis is returned, convert to array
+        if not isinstance(ax, np.ndarray):
+            ax = np.array([ax])
+
+    else:
+        # Make sure ax is the right length
+        if not isinstance(ax, np.ndarray):
+            ax = np.array([ax])
+        assert (
+            len(ax) == n_targets
+        ), "Number of axes must equal number of targets"
 
     # If no palette is provided, use matplotlib default
     if palette is None:
@@ -131,8 +140,6 @@ def plot_predictions(
 
     if fname is not None:
         plt.savefig(fname, dpi=300)
-
-    plt.show()
 
 
 def plot_weights(
