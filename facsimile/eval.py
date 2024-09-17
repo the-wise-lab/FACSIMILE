@@ -411,12 +411,12 @@ class FACSIMILEOptimiser:
         print("Best classifier:")
         print(
             r"Minimum R^2: {value}".format(
-                value=self.results_.iloc[best_idx]["min_r2"]
+                value=results_subset.iloc[best_idx]["min_r2"]
             )
         )
         print(
             r"Number of included items: {value}".format(
-                value=self.results_.iloc[best_idx]["n_items"]
+                value=results_subset.iloc[best_idx]["n_items"]
             )
         )
 
