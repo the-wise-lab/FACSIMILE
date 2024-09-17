@@ -26,7 +26,9 @@ def tqdm_joblib(tqdm_object: tqdm):
     https://stackoverflow.com/questions/24983493/tracking-progress-of-joblib-parallel-execution/58936697#58936697
     """
 
-    class TqdmBatchCompletionCallback(joblib.parallel.BatchCompletionCallBack):
+    class TqdmBatchCompletionCallback(
+        joblib.parallel.BatchCompletionCallBack
+    ):
         def __call__(self, *args, **kwargs):
             tqdm_object.update(n=self.batch_size)
             return super().__call__(*args, **kwargs)
@@ -225,7 +227,9 @@ def set_style(
     """
 
     # Check whether matplotlib already has the font
-    font_names = [f.name for f in matplotlib.font_manager.fontManager.ttflist]
+    font_names = [
+        f.name for f in matplotlib.font_manager.fontManager.ttflist
+    ]
     if font in font_names:
         print(f"Font {font} already available in Matplotlib.")
     else:

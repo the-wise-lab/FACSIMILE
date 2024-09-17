@@ -9,7 +9,9 @@ import pytest
 @pytest.mark.parametrize("random_seed", [42])
 def test_train_validation_test_split(random_seed):
     # Generate some example data
-    X, y = make_classification(n_samples=1000, n_features=10, random_state=random_seed)
+    X, y = make_classification(
+        n_samples=1000, n_features=10, random_state=random_seed
+    )
 
     # Generate 10 random split proportions
     rng = np.random.default_rng(random_seed)
@@ -21,7 +23,14 @@ def test_train_validation_test_split(random_seed):
         train_size, val_size, test_size = split_proportions[i]
         train_size += 1 - (train_size + val_size + test_size)
 
-        X_train, X_val, X_test, y_train, y_val, y_test = train_validation_test_split(
+        (
+            X_train,
+            X_val,
+            X_test,
+            y_train,
+            y_val,
+            y_test,
+        ) = train_validation_test_split(
             X,
             y,
             train_size=train_size,
@@ -31,10 +40,18 @@ def test_train_validation_test_split(random_seed):
         )
 
         # Check that the split proportions are correct
-        assert_almost_equal(X_train.shape[0] / X.shape[0], train_size, decimal=2)
-        assert_almost_equal(X_val.shape[0] / X.shape[0], val_size, decimal=2)
-        assert_almost_equal(X_test.shape[0] / X.shape[0], test_size, decimal=2)
-        assert_almost_equal(train_size + val_size + test_size, 1.0, decimal=6)
+        assert_almost_equal(
+            X_train.shape[0] / X.shape[0], train_size, decimal=2
+        )
+        assert_almost_equal(
+            X_val.shape[0] / X.shape[0], val_size, decimal=2
+        )
+        assert_almost_equal(
+            X_test.shape[0] / X.shape[0], test_size, decimal=2
+        )
+        assert_almost_equal(
+            train_size + val_size + test_size, 1.0, decimal=6
+        )
 
         # Check that the X and y data are consistent
         assert X_train.shape[0] == y_train.shape[0]
@@ -49,7 +66,9 @@ def test_train_validation_test_split(random_seed):
 
 def test_simple_predict():
     # Create example weights DataFrame
-    weights_data = {"weights": [0.5, 1.5, 2.0, 1.0]}  # Last value is the intercept
+    weights_data = {
+        "weights": [0.5, 1.5, 2.0, 1.0]
+    }  # Last value is the intercept
     weights = pd.DataFrame(weights_data)
 
     # Create example input data

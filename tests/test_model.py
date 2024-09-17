@@ -8,7 +8,9 @@ import pandas as pd
 def test_included_items():
     """Make sure that we only include predictive items"""
 
-    x, y = make_regression(n_samples=400, n_features=10, n_targets=2, random_state=42)
+    x, y = make_regression(
+        n_samples=400, n_features=10, n_targets=2, random_state=42
+    )
 
     # Scale the data
     x = scale(x)
@@ -32,7 +34,9 @@ def test_included_items():
 
 def test_alpha_values():
     """Make sure that alpha values have the intended effect"""
-    x, y = make_regression(n_samples=400, n_features=10, n_targets=2, random_state=42)
+    x, y = make_regression(
+        n_samples=400, n_features=10, n_targets=2, random_state=42
+    )
 
     # Scale the data
     x = scale(x)
@@ -54,7 +58,9 @@ def test_alpha_values():
 
 def test_included_item_names():
     """Make sure that alpha values have the intended effect"""
-    x, y = make_regression(n_samples=400, n_features=10, n_targets=2, random_state=42)
+    x, y = make_regression(
+        n_samples=400, n_features=10, n_targets=2, random_state=42
+    )
 
     # Scale the data
     x = scale(x)
@@ -70,4 +76,7 @@ def test_included_item_names():
     model.fit(x, y)
 
     # Check that the item names are correct
-    assert all(model.included_item_names == x.columns[model.included_items].tolist())
+    assert all(
+        model.included_item_names
+        == x.columns[model.included_items].tolist()
+    )
