@@ -14,7 +14,9 @@ import pandas as pd
 
 
 def test_evaluate_facsimile_with_valid_data():
-    x, y = make_regression(n_samples=400, n_features=10, n_targets=2, random_state=42)
+    x, y = make_regression(
+        n_samples=400, n_features=10, n_targets=2, random_state=42
+    )
 
     # Scale the data
     x = scale(x)
@@ -24,7 +26,9 @@ def test_evaluate_facsimile_with_valid_data():
 
     alphas = (0.01, 0.01)
 
-    metrics, n_items = evaluate_facsimile(X_train, y_train, X_val, y_val, alphas)
+    metrics, n_items = evaluate_facsimile(
+        X_train, y_train, X_val, y_val, alphas
+    )
 
     assert isinstance(metrics, dict)
     assert isinstance(metrics["score"], float)
@@ -34,7 +38,9 @@ def test_evaluate_facsimile_with_valid_data():
 
 
 def test_evaluate_facsimile_with_pandas_data():
-    x, y = make_regression(n_samples=400, n_features=10, n_targets=2, random_state=42)
+    x, y = make_regression(
+        n_samples=400, n_features=10, n_targets=2, random_state=42
+    )
 
     # Scale the data
     x = scale(x)
@@ -47,7 +53,9 @@ def test_evaluate_facsimile_with_pandas_data():
 
     alphas = (0.01, 0.01)
 
-    metrics, n_items = evaluate_facsimile(X_train, y_train, X_val, y_val, alphas)
+    metrics, n_items = evaluate_facsimile(
+        X_train, y_train, X_val, y_val, alphas
+    )
 
     assert isinstance(metrics, dict)
     assert isinstance(metrics["score"], float)
@@ -63,7 +71,9 @@ def test_evaluate_facsimile_with_fitting_failure():
     y_val = np.random.rand(20, 3)
     alphas = (1000, 1000, 1000)
 
-    metrics, n_items = evaluate_facsimile(X_train, y_train, X_val, y_val, alphas)
+    metrics, n_items = evaluate_facsimile(
+        X_train, y_train, X_val, y_val, alphas
+    )
 
     print(metrics)
 
@@ -74,7 +84,9 @@ def test_evaluate_facsimile_with_fitting_failure():
 
 
 def test_evaluate_facsimile_with_custom_metric():
-    x, y = make_regression(n_samples=400, n_features=10, n_targets=2, random_state=42)
+    x, y = make_regression(
+        n_samples=400, n_features=10, n_targets=2, random_state=42
+    )
 
     # Scale the data
     x = scale(x)
@@ -107,23 +119,33 @@ def test_calculate_score_with_numpy_array():
     n_included_items = 5
     n_features = 10
     expected_score = np.min(r2) * (1 - n_included_items / n_features)
-    assert calculate_score(r2, n_included_items, n_features) == expected_score
+    assert (
+        calculate_score(r2, n_included_items, n_features) == expected_score
+    )
 
 
 def test_calculate_score_with_list():
     r2 = [0.8, 0.85, 0.9]
     n_included_items = 5
     n_features = 10
-    expected_score = np.min(np.array(r2)) * (1 - n_included_items / n_features)
-    assert calculate_score(r2, n_included_items, n_features) == expected_score
+    expected_score = np.min(np.array(r2)) * (
+        1 - n_included_items / n_features
+    )
+    assert (
+        calculate_score(r2, n_included_items, n_features) == expected_score
+    )
 
 
 def test_calculate_score_with_single_value():
     r2 = [0.9]
     n_included_items = 1
     n_features = 10
-    expected_score = np.min(np.array(r2)) * (1 - n_included_items / n_features)
-    assert calculate_score(r2, n_included_items, n_features) == expected_score
+    expected_score = np.min(np.array(r2)) * (
+        1 - n_included_items / n_features
+    )
+    assert (
+        calculate_score(r2, n_included_items, n_features) == expected_score
+    )
 
 
 def test_calculate_score_with_zero_included_items():
@@ -131,7 +153,9 @@ def test_calculate_score_with_zero_included_items():
     n_included_items = 0
     n_features = 10
     expected_score = np.min(np.array(r2))
-    assert calculate_score(r2, n_included_items, n_features) == expected_score
+    assert (
+        calculate_score(r2, n_included_items, n_features) == expected_score
+    )
 
 
 def test_calculate_score_with_all_included_items():
@@ -139,7 +163,9 @@ def test_calculate_score_with_all_included_items():
     n_included_items = 10
     n_features = 10
     expected_score = np.min(np.array(r2)) * 0
-    assert calculate_score(r2, n_included_items, n_features) == expected_score
+    assert (
+        calculate_score(r2, n_included_items, n_features) == expected_score
+    )
 
 
 def test_get_best_classifier():
@@ -170,7 +196,9 @@ def test_get_best_classifier():
 
 def test_get_best_classifier_with_custom_metric():
     # Create a mock instance of FACSIMILEOptimiser
-    optimiser = FACSIMILEOptimiser(additional_metrics={"mse": mean_squared_error})
+    optimiser = FACSIMILEOptimiser(
+        additional_metrics={"mse": mean_squared_error}
+    )
 
     # Set up some mock results
     optimiser.results_ = pd.DataFrame(
@@ -254,7 +282,9 @@ def test_get_best_classifier_max_items_with_invalid_metric():
 
     # Call the method with an invalid metric
     with pytest.raises(ValueError):
-        optimiser.get_best_classifier_max_items(max_items=6, metric="invalid_metric")
+        optimiser.get_best_classifier_max_items(
+            max_items=6, metric="invalid_metric"
+        )
 
 
 def test_get_best_classifier_max_items_with_custom_metric():
@@ -363,4 +393,6 @@ def test_get_best_classifier_n_items_with_invalid_metric():
 
     # Call the method with an invalid metric
     with pytest.raises(ValueError):
-        optimiser.get_best_classifier_n_items(n_items=6, metric="invalid_metric")
+        optimiser.get_best_classifier_n_items(
+            n_items=6, metric="invalid_metric"
+        )

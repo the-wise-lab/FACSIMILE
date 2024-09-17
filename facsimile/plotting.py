@@ -53,7 +53,9 @@ def plot_predictions(
             len(target_names) == n_targets
         ), "Number of target variable names must equal number of targets"
     else:
-        target_names = ["Variable {}".format(i + 1) for i in range(n_targets)]
+        target_names = [
+            "Variable {}".format(i + 1) for i in range(n_targets)
+        ]
 
     # Set default figure and line keyword arguments if not provided
     if figure_kws is None:

@@ -111,7 +111,9 @@ def evaluate_facsimile(
         print("WARNING: Fitting failed. Error:")
         print(e)
         n_items = np.nan
-        metrics = {k: np.nan for k in ["score", "r2"] + list(metrics.keys())}
+        metrics = {
+            k: np.nan for k in ["score", "r2"] + list(metrics.keys())
+        }
 
     return metrics, n_items
 
@@ -169,7 +171,9 @@ class FACSIMILEOptimiser:
         # Check additional metrics are callable
         if additional_metrics is not None:
             for metric in additional_metrics.values():
-                assert callable(metric), "Additional metrics must be callable."
+                assert callable(
+                    metric
+                ), "Additional metrics must be callable."
 
         self.additional_metrics = additional_metrics
 
@@ -246,7 +250,8 @@ class FACSIMILEOptimiser:
         else:
             with tqdm_joblib(tqdm(desc="Evaluation", total=self.n_iter)):
                 results = Parallel(n_jobs=self.n_jobs)(
-                    delayed(evaluate_facsimile_with_data)(i) for i in alphas
+                    delayed(evaluate_facsimile_with_data)(i)
+                    for i in alphas
                 )
 
         # Extract results
@@ -264,9 +269,9 @@ class FACSIMILEOptimiser:
             for metric_name in self.additional_metrics.keys():
                 metrics = np.stack([i[0][metric_name] for i in results])
                 for i in range(n_targets):
-                    output_df[metric_name + "_" + target_names[i]] = metrics[
-                        :, i
-                    ]
+                    output_df[
+                        metric_name + "_" + target_names[i]
+                    ] = metrics[:, i]
 
         # Add R2s for each target
         for i in range(n_targets):
@@ -397,7 +402,9 @@ class FACSIMILEOptimiser:
             )
 
         # Get index of best classifier
-        results_subset = self.results_[self.results_["n_items"] <= max_items]
+        results_subset = self.results_[
+            self.results_["n_items"] <= max_items
+        ]
         best_idx = results_subset[results_subset["n_items"] <= max_items][
             metric
         ].argmax()
@@ -466,7 +473,9 @@ class FACSIMILEOptimiser:
         if n_items not in self.results_["n_items"].values:
             # Get the closest number of items
             closest_n_items = self.results_["n_items"].values[
-                np.argmin(np.abs(self.results_["n_items"].values - n_items))
+                np.argmin(
+                    np.abs(self.results_["n_items"].values - n_items)
+                )
             ]
             raise ValueError(
                 f"No classifier with exactly {n_items} items. Closest "
@@ -522,7 +531,9 @@ class FACSIMILEOptimiser:
             None: Displays the plot.
         """
         df = self.results_
-        scatter_kws = {"alpha": 0.6} if scatter_kws is None else scatter_kws
+        scatter_kws = (
+            {"alpha": 0.6} if scatter_kws is None else scatter_kws
+        )
         line_kws = {} if line_kws is None else line_kws
         figure_kws = {} if figure_kws is None else figure_kws
 
@@ -552,7 +563,9 @@ class FACSIMILEOptimiser:
                 p = Polynomial.fit(df["n_items"], df[y_var], degree)
 
                 # Plot the regression line for each Y variable
-                x = np.linspace(df["n_items"].min(), df["n_items"].max(), 400)
+                x = np.linspace(
+                    df["n_items"].min(), df["n_items"].max(), 400
+                )
                 y = p(x)
                 plt.plot(x, y, linewidth=2, color=color, **line_kws)
 
