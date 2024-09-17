@@ -141,7 +141,7 @@ def check_directories():
             or if the `'data'` directory is empty.
     """
     # Check if the 'notebooks' directory exists
-    if not os.path.isdir("notebooks"):
+    if not os.path.isdir("docs"):
         # If we're currently in a subdirectory of the "notebooks", move
         # two directories up
         if os.path.isdir("../examples"):
