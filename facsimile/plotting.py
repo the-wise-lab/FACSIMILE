@@ -94,22 +94,16 @@ def plot_predictions(
 
     # Plot each target variable
     for i in range(n_targets):
-        ax[i].scatter(
-            x=true[:, i], y=pred[:, i], color=palette[i], **scatter_kws
-        )
+        ax[i].scatter(x=true[:, i], y=pred[:, i], color=palette[i], **scatter_kws)
         ax[i].set_title(
             target_names[i]
-            + "\n$R^2$ = {0}".format(
-                np.round(r2_score(true[:, i], pred[:, i]), 3)
-            ),
+            + "\n$R^2$ = {0}".format(np.round(r2_score(true[:, i], pred[:, i]), 3)),
         )
 
         # Add regression line
         ax[i].plot(
             np.unique(true[:, i]),
-            np.poly1d(np.polyfit(true[:, i], pred[:, i], 1))(
-                np.unique(true[:, i])
-            ),
+            np.poly1d(np.polyfit(true[:, i], pred[:, i], 1))(np.unique(true[:, i])),
             color=palette[i],
             **line_kws,
         )
@@ -172,9 +166,7 @@ def plot_weights(
     cax = ax.matshow(values, cmap=cmap, vmin=vmin, vmax=vmax)
 
     # Add colorbar with shrink and aspect option
-    fig.colorbar(
-        cax, shrink=colorbar_shrink, aspect=colorbar_aspect, label="Weight"
-    )
+    fig.colorbar(cax, shrink=colorbar_shrink, aspect=colorbar_aspect, label="Weight")
 
     # Set axis labels
     ax.set_xticks(np.arange(data.shape[1]))
