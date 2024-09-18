@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "FACSIMILE"
 version = "0.1.0"
 description = "A package for predicting questionnaire scores from reduced item sets"
-readme = "README.md"
+readme = "readme.md"
 license = { text = "MIT" }
 
 authors = [
