@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "FACSIMILE"
+name = "FACSIMILE-py"
 version = "0.1.0"
 description = "A package for predicting questionnaire scores from reduced item sets"
 readme = "readme.md"
@@ -25,3 +25,6 @@ dependencies = [
 [project.urls]
 Homepage = "https://facsimile.thewiselab.org/"
 Repository = "https://github.com/the-wise-lab/FACSIMILE"
+
+[tool.hatch.build.targets.wheel]
+packages = ["facsimile"]
