@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "FACSIMILE"
+version = "0.1.0"
+description = "A package for predicting questionnaire scores from reduced item sets"
+readme = "README.md"
+license = { text = "MIT" }
+
+authors = [
+    { name = "Toby Wise", email = "toby.wise@kcl.ac.uk" }
+]
+
+dependencies = [
+    "pandas",
+    "scikit-learn",
+    "matplotlib",
+    "tqdm",
+    "joblib",
+    "requests",
+]
+
+[project.urls]
+Homepage = "https://facsimile.thewiselab.org/"
+Repository = "https://github.com/the-wise-lab/FACSIMILE"
