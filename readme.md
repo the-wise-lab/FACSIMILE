@@ -10,7 +10,7 @@ The method uses Lasso-regularised regression to select items that are most predi
 
 ## Installation
 
-The package can be installed using pip:
+The package can be installed using `pip`:
 
 ```bash
 pip install facsimile-py
@@ -24,7 +24,7 @@ from facsimile.eval import FACSIMILEOptimiser
 
 ## Documentation
 
-Documentation and examples are available a [https://facsimile.thewiselab.org](https://facsimile.thewiselab.org).
+Documentation and examples are available at [https://facsimile.thewiselab.org](https://facsimile.thewiselab.org).
 
 ## Basic usage
 

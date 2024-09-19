@@ -4,7 +4,7 @@ This page contains documentation for the FACtor Score IteM reductIon with Lasso 
 
 ## Installation
 
-The package can be installed using pip:
+The package can be installed using [pip](https://pypi.org/project/facsimile-py/):
 
 ```bash
 pip install facsimile-py
