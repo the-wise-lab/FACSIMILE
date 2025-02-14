@@ -208,7 +208,7 @@ class FACSIMILEOptimiser:
                 validation.
             target_names (Tuple[str], optional): Names of the target variables.
                 Defaults to `None`.
-            progress_bar (bool, optional): Whether to show a progress bar 
+            progress_bar (bool, optional): Whether to show a progress bar
                 when fitting. Default to True.
         """
 
@@ -255,7 +255,9 @@ class FACSIMILEOptimiser:
                     results.append(evaluate_facsimile_with_data(i))
         else:
             if progress_bar:
-                with tqdm_joblib(tqdm(desc="Evaluation", total=self.n_iter)):
+                with tqdm_joblib(
+                    tqdm(desc="Evaluation", total=self.n_iter)
+                ):
                     results = Parallel(n_jobs=self.n_jobs)(
                         delayed(evaluate_facsimile_with_data)(i)
                         for i in alphas
