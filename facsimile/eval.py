@@ -184,6 +184,7 @@ class FACSIMILEOptimiser:
         X_val: Union[pd.DataFrame, ArrayLike],
         y_val: Union[pd.DataFrame, ArrayLike],
         target_names: Tuple[str] = None,
+        progress_bar: bool = True,
     ) -> None:
         """
         Optimise the alpha values for each target.
@@ -207,7 +208,8 @@ class FACSIMILEOptimiser:
                 validation.
             target_names (Tuple[str], optional): Names of the target variables.
                 Defaults to `None`.
-
+            progress_bar (bool, optional): Whether to show a progress bar 
+                when fitting. Default to True.
         """
 
         # Set up RNG
@@ -245,10 +247,20 @@ class FACSIMILEOptimiser:
 
         if self.n_jobs == 1:
             results = []
-            for i in tqdm(alphas, desc="Evaluation"):
-                results.append(evaluate_facsimile_with_data(i))
+            if progress_bar:
+                for i in tqdm(alphas, desc="Evaluation"):
+                    results.append(evaluate_facsimile_with_data(i))
+            else:
+                for i in alphas:
+                    results.append(evaluate_facsimile_with_data(i))
         else:
-            with tqdm_joblib(tqdm(desc="Evaluation", total=self.n_iter)):
+            if progress_bar:
+                with tqdm_joblib(tqdm(desc="Evaluation", total=self.n_iter)):
+                    results = Parallel(n_jobs=self.n_jobs)(
+                        delayed(evaluate_facsimile_with_data)(i)
+                        for i in alphas
+                    )
+            else:
                 results = Parallel(n_jobs=self.n_jobs)(
                     delayed(evaluate_facsimile_with_data)(i)
                     for i in alphas
